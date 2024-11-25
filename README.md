@@ -1,3 +1,4 @@
+```
 Architecture:
 |   .env
 |   go.mod
@@ -37,3 +38,4 @@ Architecture:
     |       config.go
     |       
     \---utils
+```
