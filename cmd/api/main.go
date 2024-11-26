@@ -39,11 +39,11 @@ func main() {
 	engine := gin.Default()
 
 	// Initialize routers
-	authRouter := router.NewAuthRouter(authHandler, cfg.JWTSecret)
-	apiRouter := router.NewApiRouter(cfg.JWTSecret)
+	publicRouter  := router.NewPublicRouter(authHandler, cfg.JWTSecret)
+	apiRouter := router.NewApiRouter(authHandler, cfg.JWTSecret)
 
 	// Setup main router
-	mainRouter := router.NewRouter(engine, authRouter, apiRouter, []byte(cfg.JWTSecret))
+	mainRouter := router.NewRouter(engine, publicRouter, apiRouter, []byte(cfg.JWTSecret))
 	mainRouter.SetupRoutes()
 
 	// Start server

@@ -35,3 +35,16 @@ func (r *userRepository) FindById(id uuid.UUID) (*domain.User, error) {
 	}
 	return &user, nil
 }
+
+func (r *userRepository) Update(user *domain.User) error {
+	return r.db.Save(user).Error
+}
+
+func (r *userRepository) Delete(id uuid.UUID) error {
+	var user domain.User
+	err := r.db.Where("id = ?", id).First(&user).Error
+	if err != nil {
+		return err
+	}
+	return r.db.Delete(&user).Error
+}

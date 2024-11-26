@@ -15,6 +15,9 @@ type AuthUsecase interface {
     Register(req *domain.RegisterRequest) error
     Login(req *domain.LoginRequest) (string, string, error)
     RefreshToken(refreshToken string) (string, string, error)
+    GetUserByID(id uuid.UUID) (*domain.UserResponse, error)
+    UpdateUser(req *domain.UpdateRequest) error
+    DeleteUser(id uuid.UUID) error
 }
 
 type authUsecase struct {
@@ -34,11 +37,18 @@ func NewAuthUsecase(ur repository.UserRepository, secret string, expiry time.Dur
 
 
 func (u *authUsecase) Register(req *domain.RegisterRequest) error {
+    // Validasi input
+    if req.Name == "" || req.Email == "" || req.Password == "" {
+        return errors.New("all fields are required")
+    }
+
+    // Hash password
     hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
     if err != nil {
         return err
     }
 
+    // Buat objek user
     user := &domain.User{
         Name:     req.Name,
         Email:    req.Email,
@@ -46,7 +56,7 @@ func (u *authUsecase) Register(req *domain.RegisterRequest) error {
         Password: string(hashedPassword),
     }
 
-
+    // Simpan ke repository
     return u.userRepo.Create(user)
 }
 
@@ -131,4 +141,49 @@ func (u *authUsecase) RefreshToken(refreshToken string) (string, string, error) 
     }
 
     return accessToken, newRefreshToken, nil
+}
+
+func (u *authUsecase) GetUserByID(id uuid.UUID) (*domain.UserResponse, error) {
+    user, err := u.userRepo.FindById(id)
+    if err != nil {
+        return nil, err
+    }
+
+    // Mapping dari domain.User ke domain.UserResponse
+    userResponse := &domain.UserResponse{
+        ID:        user.ID,
+        Name:      user.Name,
+        Email:     user.Email,
+        Role:      user.Role,
+        CreatedAt: user.CreatedAt,
+        UpdatedAt: user.UpdatedAt,
+    }
+
+    return userResponse, nil
+}
+
+func (u *authUsecase) UpdateUser(req *domain.UpdateRequest) error {
+	// Ambil user berdasarkan ID
+	user, err := u.userRepo.FindById(req.ID)
+	if err != nil {
+		return err // Return error jika user tidak ditemukan
+	}
+
+	// Update field hanya jika dikirimkan (tidak nil)
+	if req.Name != nil {
+		user.Name = *req.Name
+	}
+	if req.Email != nil {
+		user.Email = *req.Email
+	}
+	if req.Role != nil {
+		user.Role = *req.Role
+	}
+
+	// Simpan perubahan ke database
+	return u.userRepo.Update(user)
+}
+
+func (u *authUsecase) DeleteUser(id uuid.UUID) error {
+    return u.userRepo.Delete(id)
 }

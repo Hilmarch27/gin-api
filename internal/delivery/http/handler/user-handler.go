@@ -6,6 +6,7 @@ import (
 	"github.com/Hilmarch27/gin-api/internal/domain"
 	"github.com/Hilmarch27/gin-api/internal/usecase"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type AuthHandler struct {
@@ -19,28 +20,31 @@ func NewAuthHandler(au usecase.AuthUsecase) *AuthHandler {
 }
 
 func (h *AuthHandler) Register(c *gin.Context) {
+    // Parsing input dari request body
     var req domain.RegisterRequest
     if err := c.ShouldBindJSON(&req); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
         return
     }
 
-    err := h.authUsecase.Register(&req)
-    if err != nil {
+    // Panggil usecase untuk memproses registrasi
+    if err := h.authUsecase.Register(&req); err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
         return
     }
 
+    // Response sukses
     c.JSON(http.StatusCreated, gin.H{
         "status":  "success",
         "message": "user registered successfully",
     })
 }
 
+
 func (h *AuthHandler) Login(c *gin.Context) {
     var req domain.LoginRequest
     if err := c.ShouldBindJSON(&req); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
         return
     }
 
@@ -82,5 +86,85 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
     c.JSON(http.StatusOK, gin.H{
         "status":  "success",
         "message": "tokens refreshed successfully",
+    })
+}
+
+func (h *AuthHandler) GetUserByID(c *gin.Context) {
+    user, exists := c.Get("user")
+    if !exists || user == nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "UserId not found"})
+        return
+    }
+
+    // Type assertion ke *domain.User
+    userObj, ok := user.(*domain.User)
+    if !ok {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user object"})
+        return
+    }
+
+    userId := userObj.ID
+
+    userResponse, err := h.authUsecase.GetUserByID(userId)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "status": "success",
+        "data":   userResponse,
+    })
+}
+
+func (h *AuthHandler) Update(c *gin.Context) {
+    // Ambil ID dari parameter URL
+    userId, err := uuid.Parse(c.Param("id"))
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+        return
+    }
+
+    // Bind data JSON ke UpdateRequest tanpa ID
+    var req domain.UpdateRequest
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input", "detail": err.Error()})
+        return
+    }
+
+    // Tambahkan ID dari URL ke objek request
+    req.ID = userId
+
+    // Panggil usecase untuk update user
+    if err := h.authUsecase.UpdateUser(&req); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    // Kirimkan response sukses
+    c.JSON(http.StatusOK, gin.H{
+        "status":  "success",
+        "message": "User updated successfully",
+    })
+}
+
+func (h *AuthHandler) Delete(c *gin.Context) {
+    // Ambil ID dari parameter URL
+    userId, err := uuid.Parse(c.Param("id"))
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+        return
+    }
+
+    // Panggil usecase untuk delete user
+    if err := h.authUsecase.DeleteUser(userId); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
+    // Kirimkan response sukses
+    c.JSON(http.StatusOK, gin.H{
+        "status":  "success",
+        "message": "User deleted successfully",
     })
 }

@@ -5,19 +5,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type AuthRouter struct {
+type PublicRouter  struct {
 	authHandler *handler.AuthHandler
 	jwtSecret   string
 }
 
-func NewAuthRouter(authHandler *handler.AuthHandler, jwtSecret string) *AuthRouter {
-	return &AuthRouter{
+func NewPublicRouter(authHandler *handler.AuthHandler, jwtSecret string) *PublicRouter {
+	return &PublicRouter{
 		authHandler: authHandler,
 		jwtSecret:   jwtSecret,
 	}
 }
 
-func (r *AuthRouter) Setup(engine *gin.Engine) {
+func (r *PublicRouter) Setup(engine *gin.Engine) {
 	// Public routes
 	auth := engine.Group("/auth")
 	{

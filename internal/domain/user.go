@@ -8,7 +8,7 @@ import (
 )
 
 type User struct {
-ID        uuid.UUID      `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"id"`
+	ID        uuid.UUID      `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"id"`
 	Email     string         `gorm:"uniqueIndex;not null" json:"email"`
 	Password  string         `gorm:"not null" json:"-"`
 	Name      string         `gorm:"not null" json:"name"`
@@ -43,4 +43,20 @@ type LoginResponse struct {
 	User  User   `json:"user"`
 	AccessToken string `json:"-"`
 	RefreshToken string `json:"-"`
+}
+
+type UpdateRequest struct {
+	ID    uuid.UUID `json:"-"`                              // ID hanya diisi dari parameter
+	Name  *string   `json:"name,omitempty" binding:"omitempty,min=3"` // Optional tetapi minimal 3 karakter
+	Email *string   `json:"email,omitempty" binding:"omitempty,email"` // Optional tetapi harus format email valid
+	Role  *string   `json:"role,omitempty" binding:"omitempty,oneof=admin user guest"` // Optional dengan opsi role terbatas
+}
+
+type UserResponse struct {
+	ID        uuid.UUID `json:"id"`
+	Name      string    `json:"name"`
+	Email     string    `json:"email"`
+	Role      string    `json:"role"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }

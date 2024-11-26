@@ -7,12 +7,12 @@ import (
 
 type Router struct {
     engine     *gin.Engine
-    auth       *AuthRouter
+    auth       *PublicRouter
     api        *ApiRouter
     jwtSecret  []byte
 }
 
-func NewRouter(engine *gin.Engine, authRouter *AuthRouter, apiRouter *ApiRouter, jwtSecret []byte) *Router {
+func NewRouter(engine *gin.Engine, authRouter *PublicRouter, apiRouter *ApiRouter, jwtSecret []byte) *Router {
     return &Router{
         engine: engine,
         auth:   authRouter,
