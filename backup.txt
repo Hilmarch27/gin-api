@@ -1,3 +1,5 @@
+docker dev
+
 services:
   app:
     build: 

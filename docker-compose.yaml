@@ -1,0 +1,11 @@
+services:
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: gin-api
+    ports:
+      - "3027:3027"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET=${JWT_SECRET}
