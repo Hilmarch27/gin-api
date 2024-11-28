@@ -39,3 +39,18 @@ Architecture:
     |       
     \---utils
 ```
+
+```
+run docker compose build --no-cache
+```
+
+```
+to starting the contaner
+run docker compose up -d 
+```
+
+```
+to delete container
+run docker compose down
+run docker system prune 
+```
